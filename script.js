@@ -29,7 +29,9 @@ function isEditor() {
 
 function updateEditButton() {
   editBtn.textContent = isEditor() ? "Wyloguj" : "Edytuj";
-  editBtn.onclick = isEditor() ? logout : () => loginModal.classList.remove("hidden");
+  editBtn.onclick = isEditor()
+    ? logout
+    : () => loginModal.classList.remove("hidden");
 }
 
 function loginUser() {
@@ -85,7 +87,10 @@ function renderBoard() {
         <h3>${col.name}</h3>
         ${
           isEditor()
-            ? `<button class="colorBtn" onclick="changeColor(event, ${colIndex})">🎨</button>`
+            ? `<div class="columnActions">
+                <button class="colorBtn" onclick="changeColor(event, ${colIndex})">🎨</button>
+                <button class="colorBtn" onclick="deleteColumn(event, ${colIndex})">🗑</button>
+               </div>`
             : ""
         }
       </div>
@@ -136,6 +141,16 @@ function addColumn() {
   renderBoard();
 }
 
+function deleteColumn(e, colIndex) {
+  e.stopPropagation();
+  if (!confirm("Usunąć cały status i jego zakładki?")) return;
+
+  const data = getData();
+  data.splice(colIndex, 1);
+  saveData(data);
+  renderBoard();
+}
+
 function addCard(colIndex) {
   const title = prompt("Nazwa zakładki:");
   if (!title) return;
@@ -178,6 +193,18 @@ function saveCard() {
 
   saveData(data);
   closeCard();
+}
+
+function deleteCard() {
+  if (!isEditor() || !activeCard) return;
+  if (!confirm("Usunąć tę zakładkę?")) return;
+
+  const data = getData();
+  data[activeCard.colIndex].cards.splice(activeCard.cardIndex, 1);
+
+  saveData(data);
+  closeCard();
+  renderBoard();
 }
 
 function closeCard() {
