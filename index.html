@@ -2,29 +2,41 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
-  <title>Luftera Board</title>
+  <title>Luftera Shopping</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<!-- LOGOWANIE -->
-<div id="loginBox">
-  <h2>🔒 Logowanie</h2>
-  <input id="login" placeholder="Login">
-  <input id="password" type="password" placeholder="Hasło">
-  <button onclick="login()">Zaloguj</button>
-  <p id="error"></p>
+<!-- TOP BAR -->
+<div class="topbar">
+  <span class="title">Luftera Shopping</span>
+  <button id="editBtn">Edytuj</button>
 </div>
 
 <!-- BOARD -->
-<div id="board" class="hidden">
-  <div class="top">
-    <h1>Luftera Shopping</h1>
-    <button onclick="logout()">Wyloguj</button>
-  </div>
+<div id="columns" class="columns"></div>
 
-  <div class="columns" id="columns"></div>
-  <button onclick="addColumn()">➕ Dodaj status</button>
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="modal hidden">
+  <div class="modalBox">
+    <h3>Logowanie do edycji</h3>
+    <input id="login" placeholder="Login">
+    <input id="password" type="password" placeholder="Hasło">
+    <button onclick="loginUser()">Zaloguj</button>
+    <p id="error"></p>
+  </div>
+</div>
+
+<!-- CARD MODAL -->
+<div id="cardModal" class="modal hidden">
+  <div class="modalBox">
+    <h3 id="cardTitle"></h3>
+    <textarea id="cardDesc" placeholder="Opis zakładki..."></textarea>
+    <div class="row">
+      <button onclick="saveCard()">Zapisz</button>
+      <button onclick="closeCard()">Zamknij</button>
+    </div>
+  </div>
 </div>
 
 <script src="script.js"></script>
