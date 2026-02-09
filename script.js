@@ -1,89 +1,150 @@
-// 🔑 UŻYTKOWNICY
+// ===== UŻYTKOWNICY =====
 const users = [
-  { login: "admin", password: "1234" },
-  { login: "luftera", password: "shop123" }
+  { login: "admin", password: "1234" }
 ];
 
-// AUTO LOGIN
-if (localStorage.getItem("loggedUser")) {
-  showBoard();
+// ===== STAN =====
+let activeCard = null;
+
+// ===== START =====
+renderBoard();
+updateEditButton();
+
+// ===== AUTH =====
+function isEditor() {
+  return localStorage.getItem("isEditor") === "true";
 }
 
-// LOGOWANIE
-function login() {
-  const login = document.getElementById("login").value;
-  const password = document.getElementById("password").value;
+function updateEditButton() {
+  const btn = document.getElementById("editBtn");
+  btn.textContent = isEditor() ? "Wyloguj" : "Edytuj";
+  btn.onclick = isEditor() ? logout : openLogin;
+}
 
-  const user = users.find(
-    u => u.login === login && u.password === password
-  );
+function openLogin() {
+  document.getElementById("loginModal").classList.remove("hidden");
+}
 
-  if (!user) {
-    document.getElementById("error").innerText = "❌ Zły login lub hasło";
+function loginUser() {
+  const l = login.value;
+  const p = password.value;
+
+  const ok = users.find(u => u.login === l && u.password === p);
+  if (!ok) {
+    error.innerText = "Zły login lub hasło";
     return;
   }
 
-  localStorage.setItem("loggedUser", login);
-  showBoard();
+  localStorage.setItem("isEditor", "true");
+  document.getElementById("loginModal").classList.add("hidden");
+  updateEditButton();
+  renderBoard();
 }
 
-// WYLOGOWANIE
 function logout() {
-  localStorage.removeItem("loggedUser");
-  location.reload();
+  localStorage.removeItem("isEditor");
+  updateEditButton();
+  renderBoard();
 }
 
-// POKAZ BOARD
-function showBoard() {
-  document.getElementById("loginBox").classList.add("hidden");
-  document.getElementById("board").classList.remove("hidden");
-  loadColumns();
-}
-
-// ====== BOARD ======
-
+// ===== DANE =====
 function getData() {
-  return JSON.parse(localStorage.getItem("board")) || [];
+  return JSON.parse(localStorage.getItem("board")) || [
+    {
+      name: "Do kupienia",
+      color: "#38bdf8",
+      cards: [
+        { title: "Produkt A", description: "Sprawdzić ceny" }
+      ]
+    }
+  ];
 }
 
 function saveData(data) {
   localStorage.setItem("board", JSON.stringify(data));
 }
 
-function addColumn() {
-  const name = prompt("Nazwa statusu:");
-  if (!name) return;
-
-  const data = getData();
-  data.push({ name, cards: [] });
-  saveData(data);
-  loadColumns();
-}
-
-function addCard(i) {
-  const text = prompt("Nazwa zakładki:");
-  if (!text) return;
-
-  const data = getData();
-  data[i].cards.push(text);
-  saveData(data);
-  loadColumns();
-}
-
-function loadColumns() {
+// ===== BOARD =====
+function renderBoard() {
   const el = document.getElementById("columns");
   el.innerHTML = "";
 
-  getData().forEach((col, i) => {
+  const data = getData();
+
+  data.forEach((col, i) => {
     const div = document.createElement("div");
     div.className = "column";
 
     div.innerHTML = `
+      <div class="columnHeader" style="background:${col.color}"></div>
       <h3>${col.name}</h3>
-      ${col.cards.map(c => `<div class="card">${c}</div>`).join("")}
-      <button onclick="addCard(${i})">➕ Zakładka</button>
+
+      ${col.cards.map((c, ci) => `
+        <div class="card" onclick="openCard(${i}, ${ci})">
+          ${c.title}
+        </div>
+      `).join("")}
+
+      ${isEditor() ? `<button onclick="addCard(${i})">Dodaj zakładkę</button>` : ""}
     `;
 
     el.appendChild(div);
   });
+
+  if (isEditor()) {
+    const btn = document.createElement("button");
+    btn.textContent = "Dodaj status";
+    btn.onclick = addColumn;
+    el.appendChild(btn);
+  }
+}
+
+// ===== KOLUMNY =====
+function addColumn() {
+  const name = prompt("Nazwa statusu:");
+  if (!name) return;
+
+  const color = prompt("Kolor (HEX):", "#64748b");
+
+  const data = getData();
+  data.push({ name, color, cards: [] });
+  saveData(data);
+  renderBoard();
+}
+
+// ===== KARTY =====
+function addCard(colIndex) {
+  const title = prompt("Nazwa zakładki:");
+  if (!title) return;
+
+  const data = getData();
+  data[colIndex].cards.push({ title, description: "" });
+  saveData(data);
+  renderBoard();
+}
+
+function openCard(colIndex, cardIndex) {
+  activeCard = { colIndex, cardIndex };
+
+  const card = getData()[colIndex].cards[cardIndex];
+  cardTitle.innerText = card.title;
+  cardDesc.value = card.description || "";
+
+  cardModal.classList.remove("hidden");
+}
+
+function saveCard() {
+  if (!isEditor()) return;
+
+  const data = getData();
+  const card = data[activeCard.colIndex].cards[activeCard.cardIndex];
+  card.description = cardDesc.value;
+
+  saveData(data);
+  closeCard();
+}
+
+function closeCard() {
+  cardModal.classList.add("hidden");
+  activeCard = null;
 }
