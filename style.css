@@ -1,0 +1,49 @@
+body {
+  background: #0f172a;
+  color: white;
+  font-family: system-ui;
+  padding: 30px;
+}
+
+.hidden { display: none; }
+
+input, button {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  margin-top: 10px;
+  width: 100%;
+}
+
+button {
+  background: #38bdf8;
+  cursor: pointer;
+}
+
+#loginBox {
+  max-width: 300px;
+  margin: auto;
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.columns {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.column {
+  background: #1e293b;
+  padding: 15px;
+  border-radius: 12px;
+  width: 250px;
+}
+
+.card {
+  background: #334155;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+}
