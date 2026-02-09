@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Luftera Board</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGOWANIE -->
+<div id="loginBox">
+  <h2>🔒 Logowanie</h2>
+  <input id="login" placeholder="Login">
+  <input id="password" type="password" placeholder="Hasło">
+  <button onclick="login()">Zaloguj</button>
+  <p id="error"></p>
+</div>
+
+<!-- BOARD -->
+<div id="board" class="hidden">
+  <div class="top">
+    <h1>Luftera Shopping</h1>
+    <button onclick="logout()">Wyloguj</button>
+  </div>
+
+  <div class="columns" id="columns"></div>
+  <button onclick="addColumn()">➕ Dodaj status</button>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
