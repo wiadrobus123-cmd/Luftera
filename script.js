@@ -1,12 +1,26 @@
-// ===== UŻYTKOWNICY =====
+// ===== ELEMENTY =====
+const columnsEl = document.getElementById("columns");
+const editBtn = document.getElementById("editBtn");
+
+const loginModal = document.getElementById("loginModal");
+const cardModal = document.getElementById("cardModal");
+
+const loginInput = document.getElementById("login");
+const passwordInput = document.getElementById("password");
+const errorEl = document.getElementById("error");
+
+const cardTitleEl = document.getElementById("cardTitle");
+const cardDescEl = document.getElementById("cardDesc");
+
+// ===== USERS =====
 const users = [
   { login: "admin", password: "1234" }
 ];
 
-// ===== STAN =====
+// ===== STATE =====
 let activeCard = null;
 
-// ===== START =====
+// ===== INIT =====
 renderBoard();
 updateEditButton();
 
@@ -16,27 +30,27 @@ function isEditor() {
 }
 
 function updateEditButton() {
-  const btn = document.getElementById("editBtn");
-  btn.textContent = isEditor() ? "Wyloguj" : "Edytuj";
-  btn.onclick = isEditor() ? logout : openLogin;
+  editBtn.textContent = isEditor() ? "Wyloguj" : "Edytuj";
+  editBtn.onclick = isEditor() ? logout : openLogin;
 }
 
 function openLogin() {
-  document.getElementById("loginModal").classList.remove("hidden");
+  errorEl.textContent = "";
+  loginModal.classList.remove("hidden");
 }
 
 function loginUser() {
-  const l = login.value;
-  const p = password.value;
+  const l = loginInput.value.trim();
+  const p = passwordInput.value.trim();
 
   const ok = users.find(u => u.login === l && u.password === p);
   if (!ok) {
-    error.innerText = "Zły login lub hasło";
+    errorEl.textContent = "Zły login lub hasło";
     return;
   }
 
   localStorage.setItem("isEditor", "true");
-  document.getElementById("loginModal").classList.add("hidden");
+  loginModal.classList.add("hidden");
   updateEditButton();
   renderBoard();
 }
@@ -47,7 +61,7 @@ function logout() {
   renderBoard();
 }
 
-// ===== DANE =====
+// ===== DATA =====
 function getData() {
   return JSON.parse(localStorage.getItem("board")) || [
     {
@@ -66,40 +80,45 @@ function saveData(data) {
 
 // ===== BOARD =====
 function renderBoard() {
-  const el = document.getElementById("columns");
-  el.innerHTML = "";
-
+  columnsEl.innerHTML = "";
   const data = getData();
 
-  data.forEach((col, i) => {
-    const div = document.createElement("div");
-    div.className = "column";
+  data.forEach((col, colIndex) => {
+    const column = document.createElement("div");
+    column.className = "column";
 
-    div.innerHTML = `
+    column.innerHTML = `
       <div class="columnHeader" style="background:${col.color}"></div>
       <h3>${col.name}</h3>
-
-      ${col.cards.map((c, ci) => `
-        <div class="card" onclick="openCard(${i}, ${ci})">
-          ${c.title}
-        </div>
-      `).join("")}
-
-      ${isEditor() ? `<button onclick="addCard(${i})">Dodaj zakładkę</button>` : ""}
     `;
 
-    el.appendChild(div);
+    col.cards.forEach((card, cardIndex) => {
+      const c = document.createElement("div");
+      c.className = "card";
+      c.textContent = card.title;
+      c.onclick = () => openCard(colIndex, cardIndex);
+      column.appendChild(c);
+    });
+
+    if (isEditor()) {
+      const btn = document.createElement("button");
+      btn.textContent = "Dodaj zakładkę";
+      btn.onclick = () => addCard(colIndex);
+      column.appendChild(btn);
+    }
+
+    columnsEl.appendChild(column);
   });
 
   if (isEditor()) {
-    const btn = document.createElement("button");
-    btn.textContent = "Dodaj status";
-    btn.onclick = addColumn;
-    el.appendChild(btn);
+    const addCol = document.createElement("button");
+    addCol.textContent = "Dodaj status";
+    addCol.onclick = addColumn;
+    columnsEl.appendChild(addCol);
   }
 }
 
-// ===== KOLUMNY =====
+// ===== COLUMNS =====
 function addColumn() {
   const name = prompt("Nazwa statusu:");
   if (!name) return;
@@ -112,7 +131,7 @@ function addColumn() {
   renderBoard();
 }
 
-// ===== KARTY =====
+// ===== CARDS =====
 function addCard(colIndex) {
   const title = prompt("Nazwa zakładki:");
   if (!title) return;
@@ -127,18 +146,21 @@ function openCard(colIndex, cardIndex) {
   activeCard = { colIndex, cardIndex };
 
   const card = getData()[colIndex].cards[cardIndex];
-  cardTitle.innerText = card.title;
-  cardDesc.value = card.description || "";
+  cardTitleEl.textContent = card.title;
+  cardDescEl.value = card.description || "";
+
+  // PODGLĄD: textarea readonly
+  cardDescEl.readOnly = !isEditor();
 
   cardModal.classList.remove("hidden");
 }
 
 function saveCard() {
-  if (!isEditor()) return;
+  if (!isEditor() || !activeCard) return;
 
   const data = getData();
-  const card = data[activeCard.colIndex].cards[activeCard.cardIndex];
-  card.description = cardDesc.value;
+  data[activeCard.colIndex].cards[activeCard.cardIndex].description =
+    cardDescEl.value;
 
   saveData(data);
   closeCard();
