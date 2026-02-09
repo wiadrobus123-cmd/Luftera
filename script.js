@@ -13,16 +13,14 @@ const cardTitleEl = document.getElementById("cardTitle");
 const cardDescEl = document.getElementById("cardDesc");
 
 // ===== USERS =====
-const users = [
-  { login: "admin", password: "1234" }
-];
+const users = [{ login: "admin", password: "1234" }];
 
 // ===== STATE =====
 let activeCard = null;
 
 // ===== INIT =====
-renderBoard();
 updateEditButton();
+renderBoard();
 
 // ===== AUTH =====
 function isEditor() {
@@ -31,28 +29,22 @@ function isEditor() {
 
 function updateEditButton() {
   editBtn.textContent = isEditor() ? "Wyloguj" : "Edytuj";
-  editBtn.onclick = isEditor() ? logout : openLogin;
-}
-
-function openLogin() {
-  errorEl.textContent = "";
-  loginModal.classList.remove("hidden");
+  editBtn.onclick = isEditor() ? logout : () => loginModal.classList.remove("hidden");
 }
 
 function loginUser() {
-  const l = loginInput.value.trim();
-  const p = passwordInput.value.trim();
-
-  const ok = users.find(u => u.login === l && u.password === p);
-  if (!ok) {
+  if (
+    users.find(
+      u => u.login === loginInput.value && u.password === passwordInput.value
+    )
+  ) {
+    localStorage.setItem("isEditor", "true");
+    loginModal.classList.add("hidden");
+    updateEditButton();
+    renderBoard();
+  } else {
     errorEl.textContent = "Zły login lub hasło";
-    return;
   }
-
-  localStorage.setItem("isEditor", "true");
-  loginModal.classList.add("hidden");
-  updateEditButton();
-  renderBoard();
 }
 
 function logout() {
@@ -68,7 +60,7 @@ function getData() {
       name: "Do kupienia",
       color: "#38bdf8",
       cards: [
-        { title: "Produkt A", description: "Sprawdzić ceny" }
+        { title: "Produkt A", description: "Sprawdzić ceny u dostawców" }
       ]
     }
   ];
@@ -89,13 +81,27 @@ function renderBoard() {
 
     column.innerHTML = `
       <div class="columnHeader" style="background:${col.color}"></div>
-      <h3>${col.name}</h3>
+      <div class="columnTitle">
+        <h3>${col.name}</h3>
+        ${
+          isEditor()
+            ? `<button class="colorBtn" onclick="changeColor(event, ${colIndex})">🎨</button>`
+            : ""
+        }
+      </div>
     `;
 
     col.cards.forEach((card, cardIndex) => {
       const c = document.createElement("div");
       c.className = "card";
-      c.textContent = card.title;
+      c.innerHTML = `
+        <div class="cardTitle">${card.title}</div>
+        ${
+          card.description
+            ? `<div class="cardDescPreview">${card.description.slice(0, 60)}...</div>`
+            : ""
+        }
+      `;
       c.onclick = () => openCard(colIndex, cardIndex);
       column.appendChild(c);
     });
@@ -118,12 +124,11 @@ function renderBoard() {
   }
 }
 
-// ===== COLUMNS =====
+// ===== ACTIONS =====
 function addColumn() {
   const name = prompt("Nazwa statusu:");
-  if (!name) return;
-
   const color = prompt("Kolor (HEX):", "#64748b");
+  if (!name) return;
 
   const data = getData();
   data.push({ name, color, cards: [] });
@@ -131,7 +136,6 @@ function addColumn() {
   renderBoard();
 }
 
-// ===== CARDS =====
 function addCard(colIndex) {
   const title = prompt("Nazwa zakładki:");
   if (!title) return;
@@ -142,14 +146,24 @@ function addCard(colIndex) {
   renderBoard();
 }
 
+function changeColor(e, colIndex) {
+  e.stopPropagation();
+  const color = prompt("Nowy kolor (HEX):");
+  if (!color) return;
+
+  const data = getData();
+  data[colIndex].color = color;
+  saveData(data);
+  renderBoard();
+}
+
+// ===== CARD MODAL =====
 function openCard(colIndex, cardIndex) {
   activeCard = { colIndex, cardIndex };
-
   const card = getData()[colIndex].cards[cardIndex];
+
   cardTitleEl.textContent = card.title;
   cardDescEl.value = card.description || "";
-
-  // PODGLĄD: textarea readonly
   cardDescEl.readOnly = !isEditor();
 
   cardModal.classList.remove("hidden");
